@@ -19,7 +19,7 @@
     <script>
         let collectedPayload = null;
 
-        // 1. システムおよびブラウザ基本属性の取得 (User-Agentの補正を含む)
+        // 1. システムおよびブラウザ基本属性の取得（フォールバック強化版）
         async function getBasicSignals() {
             let ua = navigator.userAgent;
             
@@ -40,54 +40,67 @@
                         ua = ua.replace(/; K\)/, `; ${hints.model})`);
                     }
                 } catch (e) {
-                    // 取得に失敗した場合はデフォルトのUAを維持
+                    // 取得失敗時はデフォルトUAを維持
                 }
             }
 
+            // 画面サイズの安全な取得（ブラウザや表示倍率による非互換性を防止）
+            const screenW = (window.screen && window.screen.width) ? window.screen.width : (window.innerWidth || 0);
+            const screenH = (window.screen && window.screen.height) ? window.screen.height : (window.innerHeight || 0);
+
             return {
                 userAgent: ua,
-                platform: navigator.platform,
-                language: navigator.language,
-                hardwareConcurrency: navigator.hardwareConcurrency || '非対応/隠蔽',
-                deviceMemory: navigator.deviceMemory || '非対応/隠蔽',
-                screenResolution: `${screen.width}x${screen.height}`,
-                colorDepth: screen.colorDepth,
+                platform: navigator.platform || '',
+                language: navigator.language || 'ja-JP',
+                hardwareConcurrency: Number(navigator.hardwareConcurrency) || 4,
+                deviceMemory: Number(navigator.deviceMemory) || 8,
+                screenResolution: `${screenW}x${screenH}`,
+                colorDepth: window.screen ? (window.screen.colorDepth || 24) : 24,
                 devicePixelRatio: window.devicePixelRatio || 1,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tokyo',
                 webdriver: navigator.webdriver || false
             };
         }
 
-        // 2. Canvas APIによるグラフィック描画指紋の生成
+        // 2. Canvas APIによるグラフィックス描画指紋の生成
         function getCanvasFingerprint() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 200;
-            canvas.height = 50;
-            const ctx = canvas.getContext('2d');
-            
-            ctx.textBaseline = 'top';
-            ctx.font = "14px 'Arial'";
-            ctx.fillStyle = '#f60';
-            ctx.fillRect(125, 1, 62, 20);
-            ctx.fillStyle = '#069';
-            ctx.fillText('Security_Check_#123', 2, 15);
-            
-            return canvas.toDataURL();
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 200;
+                canvas.height = 50;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return '';
+                
+                ctx.textBaseline = 'top';
+                ctx.font = "14px 'Arial'";
+                ctx.fillStyle = '#f60';
+                ctx.fillRect(125, 1, 62, 20);
+                ctx.fillStyle = '#069';
+                ctx.fillText('Security_Check_#123', 2, 15);
+                
+                return canvas.toDataURL();
+            } catch (e) {
+                return '';
+            }
         }
 
         // 3. WebGL APIによるGPU情報の取得
         function getWebGLInfo() {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-            if (!gl) return null;
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (!gl) return null;
 
-            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-            if (!debugInfo) return null;
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (!debugInfo) return null;
 
-            return {
-                vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
-                renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
-            };
+                return {
+                    vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || '',
+                    renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || ''
+                };
+            } catch (e) {
+                return null;
+            }
         }
 
         // データの集約と表示
@@ -101,7 +114,6 @@
 
             document.getElementById('output').textContent = JSON.stringify(collectedPayload, null, 2);
             
-            // 収集完了後にダウンロードボタンを有効化
             const downloadBtn = document.getElementById('downloadBtn');
             downloadBtn.disabled = false;
         }
