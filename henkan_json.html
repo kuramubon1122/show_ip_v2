@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デバイスプロファイル JSON 変換ツール</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background-color: #f9f9f9; color: #333; }
+        h2 { margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; margin-bottom: 20px; }
+        textarea { width: 100%; height: 200px; padding: 12px; font-family: monospace; font-size: 13px; border: 1px solid #ccc; border-radius: 6px; resize: vertical; background: #fff; box-sizing: border-box; }
+        button { margin-top: 15px; padding: 12px 24px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #45a049; }
+        #errorMsg { color: #f44336; margin-top: 10px; font-size: 14px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+    <h2>デバイスプロファイル JSON 変換ツール</h2>
+    <p>スプレッドシートからコピーしたデータを下の枠に貼り付け、「JSONファイルをダウンロード」を押してください。</p>
+
+    <textarea id="inputData" placeholder="ここにスプレッドシートのデータをそのまま貼り付け..."></textarea>
+    <br>
+    <button id="convertBtn">JSONファイルをダウンロード</button>
+    <div id="errorMsg"></div>
+
+    <script>
+        document.getElementById('convertBtn').addEventListener('click', () => {
+            const rawText = document.getElementById('inputData').value.trim();
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = "";
+
+            if (!rawText) {
+                errorDiv.textContent = "データを貼り付けてください。";
+                return;
+            }
+
+            try {
+                let jsonPayload = null;
+
+                // テキストの中から最初の `{` から最後の `}` までを確実に切り出す
+                const firstBrace = rawText.indexOf('{');
+                const lastBrace = rawText.lastIndexOf('}');
+
+                if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                    const jsonString = rawText.substring(firstBrace, lastBrace + 1);
+                    jsonPayload = JSON.parse(jsonString);
+                } else {
+                    throw new Error("有効なJSONデータ（{ から } の構造）が見つかりませんでした。");
+                }
+
+                // 必須構造のチェックと補正
+                if (!jsonPayload.basic) {
+                    jsonPayload = {
+                        timestamp: new Date().toISOString(),
+                        basic: jsonPayload.basic || {},
+                        canvasDataURL: jsonPayload.canvasDataURL || "",
+                        webgl: jsonPayload.webgl || null,
+                        storage: jsonPayload.storage || { cookies: {}, localStorage: {}, sessionStorage: {} }
+                    };
+                }
+
+                // 整形された美しいJSON文字列に変換
+                const formattedJson = JSON.stringify(jsonPayload, null, 2);
+
+                // ファイルとしてダウンロード実行
+                const blob = new Blob([formattedJson], { type: 'application/json;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "device_profile_with_storage.json";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+            } catch (err) {
+                errorDiv.textContent = "エラー: " + err.message;
+            }
+        });
+    </script>
+</body>
+</html>

