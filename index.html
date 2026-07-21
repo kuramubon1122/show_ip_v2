@@ -2,41 +2,50 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>クライアントシグナル収集デモ（拡張版）</title>
+    <title>クライアントシグナル収集・ダウンロード</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        button { padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
+        button:hover { background-color: #45a049; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
+    </style>
 </head>
 <body>
     <h2>取得された端末情報（デバイスシグナル）</h2>
+    <button id="downloadBtn" disabled>JSONファイルをダウンロード</button>
     <pre id="output">収集処理中...</pre>
 
     <script>
-        // 1. システムおよびブラウザ基本属性の取得 (Navigator / Screen API / Client Hints)
+        let collectedPayload = null;
+
+        // 1. システムおよびブラウザ基本属性の取得 (User-Agentの補正を含む)
         async function getBasicSignals() {
-            let uaData = {};
+            let ua = navigator.userAgent;
             
-            // User-Agent Client Hints から詳細な情報を非同期で取得
             if (navigator.userAgentData) {
                 try {
-                    const highEntropy = await navigator.userAgentData.getHighEntropyValues([
-                        "architecture",
-                        "model",
+                    const hints = await navigator.userAgentData.getHighEntropyValues([
                         "platform",
                         "platformVersion",
-                        "uaFullVersion",
-                        "fullVersionList"
+                        "model"
                     ]);
-                    uaData = {
-                        brands: navigator.userAgentData.brands,
-                        mobile: navigator.userAgentData.mobile,
-                        ...highEntropy
-                    };
+                    
+                    if (hints.platform === "Android" && hints.platformVersion) {
+                        const majorVersion = hints.platformVersion.split('.')[0];
+                        ua = ua.replace(/Android 10/, `Android ${majorVersion}`);
+                    }
+                    
+                    if (hints.model && hints.model !== "") {
+                        ua = ua.replace(/; K\)/, `; ${hints.model})`);
+                    }
                 } catch (e) {
-                    uaData = { error: "Client Hints の取得に失敗しました" };
+                    // 取得に失敗した場合はデフォルトのUAを維持
                 }
             }
 
             return {
-                userAgent: navigator.userAgent,
-                userAgentData: uaData, // ここに正確なOSバージョンや端末モデルが含まれます
+                userAgent: ua,
                 platform: navigator.platform,
                 language: navigator.language,
                 hardwareConcurrency: navigator.hardwareConcurrency || '非対応/隠蔽',
@@ -81,9 +90,9 @@
             };
         }
 
-        // データの集約と表示（非同期処理）
+        // データの集約と表示
         async function init() {
-            const collectedPayload = {
+            collectedPayload = {
                 timestamp: new Date().toISOString(),
                 basic: await getBasicSignals(),
                 canvasFingerprintLength: getCanvasFingerprint().length,
@@ -91,7 +100,24 @@
             };
 
             document.getElementById('output').textContent = JSON.stringify(collectedPayload, null, 2);
+            
+            // 収集完了後にダウンロードボタンを有効化
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.disabled = false;
         }
+
+        // ダウンロードボタンのクリックイベント
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            if (!collectedPayload) return;
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collectedPayload, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "device_profile.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        });
 
         init();
     </script>
