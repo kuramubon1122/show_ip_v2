@@ -2,135 +2,95 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>クライアントシグナル収集・ダウンロード</title>
+    <title>高精度クライアントシグナル収集</title>
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
-        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
         button { padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
-        button:hover { background-color: #45a049; }
-        button:disabled { background-color: #cccccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
-    <h2>取得された端末情報（デバイスシグナル）</h2>
-    <button id="downloadBtn" disabled>JSONファイルをダウンロード</button>
+    <h2>高精度デバイスシグナル（偽装用）</h2>
+    <button id="downloadBtn" disabled>強化版JSONをダウンロード</button>
     <pre id="output">収集処理中...</pre>
 
     <script>
-        let collectedPayload = null;
-
-        // 1. システムおよびブラウザ基本属性の取得（フォールバック強化版）
         async function getBasicSignals() {
-            let ua = navigator.userAgent;
-            
+            let uaData = null;
             if (navigator.userAgentData) {
                 try {
-                    const hints = await navigator.userAgentData.getHighEntropyValues([
-                        "platform",
-                        "platformVersion",
-                        "model"
+                    // スマホから詳細なClient Hintsを丸ごと引っこ抜く
+                    uaData = await navigator.userAgentData.getHighEntropyValues([
+                        "architecture", "bitness", "brands", "mobile", "model", "platform", "platformVersion", "fullVersionList"
                     ]);
-                    
-                    if (hints.platform === "Android" && hints.platformVersion) {
-                        const majorVersion = hints.platformVersion.split('.')[0];
-                        ua = ua.replace(/Android 10/, `Android ${majorVersion}`);
-                    }
-                    
-                    if (hints.model && hints.model !== "") {
-                        ua = ua.replace(/; K\)/, `; ${hints.model})`);
-                    }
-                } catch (e) {
-                    // 取得失敗時はデフォルトUAを維持
-                }
+                } catch(e) {}
             }
 
-            // 画面サイズの安全な取得（ブラウザや表示倍率による非互換性を防止）
-            const screenW = (window.screen && window.screen.width) ? window.screen.width : (window.innerWidth || 0);
-            const screenH = (window.screen && window.screen.height) ? window.screen.height : (window.innerHeight || 0);
-
             return {
-                userAgent: ua,
+                userAgent: navigator.userAgent,
                 platform: navigator.platform || '',
                 language: navigator.language || 'ja-JP',
-                hardwareConcurrency: Number(navigator.hardwareConcurrency) || 4,
+                hardwareConcurrency: Number(navigator.hardwareConcurrency) || 8,
                 deviceMemory: Number(navigator.deviceMemory) || 8,
-                screenResolution: `${screenW}x${screenH}`,
-                colorDepth: window.screen ? (window.screen.colorDepth || 24) : 24,
-                devicePixelRatio: window.devicePixelRatio || 1,
+                // ScreenとWindowを完全に分離して収集
+                screen: {
+                    width: window.screen.width, height: window.screen.height,
+                    availWidth: window.screen.availWidth, availHeight: window.screen.availHeight,
+                    colorDepth: window.screen.colorDepth || 24, pixelDepth: window.screen.pixelDepth || 24
+                },
+                window: {
+                    innerWidth: window.innerWidth, innerHeight: window.innerHeight,
+                    outerWidth: window.outerWidth, outerHeight: window.outerHeight,
+                    devicePixelRatio: window.devicePixelRatio || 1
+                },
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tokyo',
-                webdriver: navigator.webdriver || false
+                webdriver: navigator.webdriver || false,
+                uaData: uaData
             };
         }
 
-        // 2. Canvas APIによるグラフィックス描画指紋の生成
         function getCanvasFingerprint() {
             try {
                 const canvas = document.createElement('canvas');
-                canvas.width = 200;
-                canvas.height = 50;
+                canvas.width = 200; canvas.height = 50;
                 const ctx = canvas.getContext('2d');
-                if (!ctx) return '';
-                
-                ctx.textBaseline = 'top';
-                ctx.font = "14px 'Arial'";
-                ctx.fillStyle = '#f60';
-                ctx.fillRect(125, 1, 62, 20);
-                ctx.fillStyle = '#069';
-                ctx.fillText('Security_Check_#123', 2, 15);
-                
-                return canvas.toDataURL();
-            } catch (e) {
-                return '';
-            }
+                ctx.textBaseline = 'top'; ctx.font = "14px 'Arial'";
+                ctx.fillStyle = '#f60'; ctx.fillRect(125, 1, 62, 20);
+                ctx.fillStyle = '#069'; ctx.fillText('Security_Check_#123', 2, 15);
+                return canvas.toDataURL(); // 長さではなく画像データそのものを取得
+            } catch (e) { return ''; }
         }
 
-        // 3. WebGL APIによるGPU情報の取得
         function getWebGLInfo() {
             try {
                 const canvas = document.createElement('canvas');
                 const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                if (!gl) return null;
-
-                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                if (!debugInfo) return null;
-
-                return {
-                    vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || '',
-                    renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || ''
-                };
-            } catch (e) {
-                return null;
-            }
+                const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+                return debugInfo ? {
+                    vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
+                    renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+                } : null;
+            } catch (e) { return null; }
         }
 
-        // データの集約と表示
+        let collectedPayload = null;
         async function init() {
             collectedPayload = {
                 timestamp: new Date().toISOString(),
                 basic: await getBasicSignals(),
-                canvasFingerprintLength: getCanvasFingerprint().length,
+                canvasDataURL: getCanvasFingerprint(), // Canvas画像を保存
                 webgl: getWebGLInfo()
             };
-
             document.getElementById('output').textContent = JSON.stringify(collectedPayload, null, 2);
-            
-            const downloadBtn = document.getElementById('downloadBtn');
-            downloadBtn.disabled = false;
+            document.getElementById('downloadBtn').disabled = false;
         }
 
-        // ダウンロードボタンのクリックイベント
         document.getElementById('downloadBtn').addEventListener('click', () => {
-            if (!collectedPayload) return;
-            
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collectedPayload, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "device_profile.json");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collectedPayload));
+            const a = document.createElement('a');
+            a.href = dataStr; a.download = "device_profile_high_precision.json";
+            a.click();
         });
-
         init();
     </script>
 </body>
