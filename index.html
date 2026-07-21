@@ -2,26 +2,50 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>クライアントシグナル収集デモ</title>
+    <title>クライアントシグナル収集デモ（拡張版）</title>
 </head>
 <body>
     <h2>取得された端末情報（デバイスシグナル）</h2>
     <pre id="output">収集処理中...</pre>
 
     <script>
-        // 1. システムおよびブラウザ基本属性の取得 (Navigator / Screen API)
-        function getBasicSignals() {
+        // 1. システムおよびブラウザ基本属性の取得 (Navigator / Screen API / Client Hints)
+        async function getBasicSignals() {
+            let uaData = {};
+            
+            // User-Agent Client Hints から詳細な情報を非同期で取得
+            if (navigator.userAgentData) {
+                try {
+                    const highEntropy = await navigator.userAgentData.getHighEntropyValues([
+                        "architecture",
+                        "model",
+                        "platform",
+                        "platformVersion",
+                        "uaFullVersion",
+                        "fullVersionList"
+                    ]);
+                    uaData = {
+                        brands: navigator.userAgentData.brands,
+                        mobile: navigator.userAgentData.mobile,
+                        ...highEntropy
+                    };
+                } catch (e) {
+                    uaData = { error: "Client Hints の取得に失敗しました" };
+                }
+            }
+
             return {
                 userAgent: navigator.userAgent,
+                userAgentData: uaData, // ここに正確なOSバージョンや端末モデルが含まれます
                 platform: navigator.platform,
                 language: navigator.language,
-                hardwareConcurrency: navigator.hardwareConcurrency || '非対応/隠蔽', // CPUコア数
-                deviceMemory: navigator.deviceMemory || '非対応/隠蔽',             // メモリ(GB)
+                hardwareConcurrency: navigator.hardwareConcurrency || '非対応/隠蔽',
+                deviceMemory: navigator.deviceMemory || '非対応/隠蔽',
                 screenResolution: `${screen.width}x${screen.height}`,
                 colorDepth: screen.colorDepth,
-                devicePixelRatio: window.devicePixelRatio || 1,                    // ピクセル比
+                devicePixelRatio: window.devicePixelRatio || 1,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                webdriver: navigator.webdriver || false                            // 自動化ツール検知
+                webdriver: navigator.webdriver || false
             };
         }
 
@@ -39,7 +63,6 @@
             ctx.fillStyle = '#069';
             ctx.fillText('Security_Check_#123', 2, 15);
             
-            // 描画結果をBase64テキストデータとして抽出（端末のGPU/フォント描画差が現れる）
             return canvas.toDataURL();
         }
 
@@ -53,20 +76,24 @@
             if (!debugInfo) return null;
 
             return {
-                vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),   // GPUベンダー
-                renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) // GPUモデル名
+                vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
+                renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
             };
         }
 
-        // データの集約と表示
-        const collectedPayload = {
-            timestamp: new Date().toISOString(),
-            basic: getBasicSignals(),
-            canvasFingerprintLength: getCanvasFingerprint().length,
-            webgl: getWebGLInfo()
-        };
+        // データの集約と表示（非同期処理）
+        async function init() {
+            const collectedPayload = {
+                timestamp: new Date().toISOString(),
+                basic: await getBasicSignals(),
+                canvasFingerprintLength: getCanvasFingerprint().length,
+                webgl: getWebGLInfo()
+            };
 
-        document.getElementById('output').textContent = JSON.stringify(collectedPayload, null, 2);
+            document.getElementById('output').textContent = JSON.stringify(collectedPayload, null, 2);
+        }
+
+        init();
     </script>
 </body>
 </html>
