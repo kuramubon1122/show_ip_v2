@@ -2,16 +2,16 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>端末情報パーフェクト収集</title>
+    <title>ストレージ＆シグナル完全収集</title>
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
-        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; }
-        button { padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; max-height: 300px; }
+        button { padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
     </style>
 </head>
 <body>
-    <h2>パーフェクト・デバイスシグナル収集</h2>
-    <button id="downloadBtn" disabled>完全版JSONをダウンロード</button>
+    <h2>ストレージ＆デバイスシグナル完全収集</h2>
+    <button id="downloadBtn" disabled>完全版JSON（ストレージ込）をダウンロード</button>
     <pre id="output">解析中...</pre>
 
     <script>
@@ -24,8 +24,6 @@
                     uaData = await navigator.userAgentData.getHighEntropyValues([
                         "architecture", "bitness", "brands", "mobile", "model", "platform", "platformVersion", "fullVersionList"
                     ]);
-
-                    // Chromeの「Android 10; K」という偽装制限を解除し、生の端末名とOSバージョンに復元
                     if (uaData && uaData.platform === "Android") {
                         const androidVer = uaData.platformVersion ? uaData.platformVersion.split('.')[0] : "16";
                         const modelStr = uaData.model ? `; ${uaData.model}` : "";
@@ -46,16 +44,38 @@
                     colorDepth: window.screen.colorDepth || 24, pixelDepth: window.screen.pixelDepth || 24
                 },
                 window: {
-                    innerWidth: window.screen.width, // ビューポートのずれを補正
-                    innerHeight: window.screen.height,
-                    outerWidth: window.screen.width,
-                    outerHeight: window.screen.height,
+                    innerWidth: window.screen.width, innerHeight: window.screen.height,
+                    outerWidth: window.screen.width, outerHeight: window.screen.height,
                     devicePixelRatio: window.devicePixelRatio || 1
                 },
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tokyo',
                 webdriver: navigator.webdriver || false,
                 uaData: uaData
             };
+        }
+
+        // クッキーをパースしてオブジェクト化する関数
+        function getCookiesObject() {
+            const cookies = {};
+            document.cookie.split(';').forEach(cookie => {
+                const parts = cookie.trim().split('=');
+                if (parts.length === 2) {
+                    cookies[parts[0]] = decodeURIComponent(parts[1]);
+                }
+            });
+            return cookies;
+        }
+
+        // ローカルストレージとセッションストレージの全取得
+        function getStorageData(storage) {
+            const data = {};
+            try {
+                for (let i = 0; i < storage.length; i++) {
+                    const key = storage.key(i);
+                    data[key] = storage.getItem(key);
+                }
+            } catch(e) {}
+            return data;
         }
 
         function getCanvasFingerprint() {
@@ -88,7 +108,12 @@
                 timestamp: new Date().toISOString(),
                 basic: await getBasicSignals(),
                 canvasDataURL: getCanvasFingerprint(),
-                webgl: getWebGLInfo()
+                webgl: getWebGLInfo(),
+                storage: {
+                    cookies: getCookiesObject(),
+                    localStorage: getStorageData(localStorage),
+                    sessionStorage: getStorageData(sessionStorage)
+                }
             };
             document.getElementById('output').textContent = JSON.stringify(collectedPayload, null, 2);
             document.getElementById('downloadBtn').disabled = false;
@@ -97,7 +122,7 @@
         document.getElementById('downloadBtn').addEventListener('click', () => {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collectedPayload, null, 2));
             const a = document.createElement('a');
-            a.href = dataStr; a.download = "device_profile_galaxy_s26.json";
+            a.href = dataStr; a.download = "device_profile_with_storage.json";
             a.click();
         });
         init();
