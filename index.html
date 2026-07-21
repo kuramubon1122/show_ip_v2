@@ -2,45 +2,54 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>高精度クライアントシグナル収集</title>
+    <title>端末情報パーフェクト収集</title>
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
-        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
-        button { padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; }
+        button { padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <h2>高精度デバイスシグナル（偽装用）</h2>
-    <button id="downloadBtn" disabled>強化版JSONをダウンロード</button>
-    <pre id="output">収集処理中...</pre>
+    <h2>パーフェクト・デバイスシグナル収集</h2>
+    <button id="downloadBtn" disabled>完全版JSONをダウンロード</button>
+    <pre id="output">解析中...</pre>
 
     <script>
         async function getBasicSignals() {
+            let rawUA = navigator.userAgent;
             let uaData = null;
+
             if (navigator.userAgentData) {
                 try {
-                    // スマホから詳細なClient Hintsを丸ごと引っこ抜く
                     uaData = await navigator.userAgentData.getHighEntropyValues([
                         "architecture", "bitness", "brands", "mobile", "model", "platform", "platformVersion", "fullVersionList"
                     ]);
+
+                    // Chromeの「Android 10; K」という偽装制限を解除し、生の端末名とOSバージョンに復元
+                    if (uaData && uaData.platform === "Android") {
+                        const androidVer = uaData.platformVersion ? uaData.platformVersion.split('.')[0] : "16";
+                        const modelStr = uaData.model ? `; ${uaData.model}` : "";
+                        rawUA = rawUA.replace(/Android 10; K/, `Android ${androidVer}${modelStr}`);
+                    }
                 } catch(e) {}
             }
 
             return {
-                userAgent: navigator.userAgent,
+                userAgent: rawUA,
                 platform: navigator.platform || '',
                 language: navigator.language || 'ja-JP',
                 hardwareConcurrency: Number(navigator.hardwareConcurrency) || 8,
                 deviceMemory: Number(navigator.deviceMemory) || 8,
-                // ScreenとWindowを完全に分離して収集
                 screen: {
                     width: window.screen.width, height: window.screen.height,
                     availWidth: window.screen.availWidth, availHeight: window.screen.availHeight,
                     colorDepth: window.screen.colorDepth || 24, pixelDepth: window.screen.pixelDepth || 24
                 },
                 window: {
-                    innerWidth: window.innerWidth, innerHeight: window.innerHeight,
-                    outerWidth: window.outerWidth, outerHeight: window.outerHeight,
+                    innerWidth: window.screen.width, // ビューポートのずれを補正
+                    innerHeight: window.screen.height,
+                    outerWidth: window.screen.width,
+                    outerHeight: window.screen.height,
                     devicePixelRatio: window.devicePixelRatio || 1
                 },
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tokyo',
@@ -57,7 +66,7 @@
                 ctx.textBaseline = 'top'; ctx.font = "14px 'Arial'";
                 ctx.fillStyle = '#f60'; ctx.fillRect(125, 1, 62, 20);
                 ctx.fillStyle = '#069'; ctx.fillText('Security_Check_#123', 2, 15);
-                return canvas.toDataURL(); // 長さではなく画像データそのものを取得
+                return canvas.toDataURL();
             } catch (e) { return ''; }
         }
 
@@ -78,7 +87,7 @@
             collectedPayload = {
                 timestamp: new Date().toISOString(),
                 basic: await getBasicSignals(),
-                canvasDataURL: getCanvasFingerprint(), // Canvas画像を保存
+                canvasDataURL: getCanvasFingerprint(),
                 webgl: getWebGLInfo()
             };
             document.getElementById('output').textContent = JSON.stringify(collectedPayload, null, 2);
@@ -86,9 +95,9 @@
         }
 
         document.getElementById('downloadBtn').addEventListener('click', () => {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collectedPayload));
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collectedPayload, null, 2));
             const a = document.createElement('a');
-            a.href = dataStr; a.download = "device_profile_high_precision.json";
+            a.href = dataStr; a.download = "device_profile_galaxy_s26.json";
             a.click();
         });
         init();
